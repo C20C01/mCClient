@@ -278,7 +278,7 @@ public class Main {
                 | > port <--------Server's port
                 | > protocol <----Server's protocol
                 |                 only supports 757 (1.18)
-                | > userName <----Your name
+                | > username <----Your name
                 | > uuid <--------Your UUID
                 | > token <-------Your AccessToken
                 | > cancel <------Exit this setting mode

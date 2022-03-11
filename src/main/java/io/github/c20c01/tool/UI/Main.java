@@ -8,10 +8,9 @@ public class Main extends JFrame {
     //No development, no need to read
 
     public Main() {
-        setResizable(false);
         setTitle("mCClient");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setBounds(200, 250, 450, 190);
+        setBounds(200, 250, 900, 600);
         JPanel contentPane = new JPanel();
         contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
         setContentPane(contentPane);
@@ -21,5 +20,6 @@ public class Main extends JFrame {
 
     public static void main(String[] args) {
 
+        new Main();
     }
 }
