@@ -297,7 +297,7 @@ public class Main {
     }
 
     @SuppressWarnings("InfiniteRecursion")
-    private static void input() throws IOException {
+    private static void input() {
         try (Scanner sc = new Scanner(System.in)) {
             String str = sc.nextLine();
             if (str.equals("/cc")) {
@@ -312,6 +312,10 @@ public class Main {
             } else
                 command(str);
             input();
+        } catch (Exception e) {
+            System.out.println("Exception: " + e.getMessage());
+            play = false;
+            close();
         }
     }
 }

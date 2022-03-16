@@ -21,7 +21,6 @@ public class MinecraftClient {
     private final int port;
     private final int protocol;
     private final Object lock = new Object();
-
     private VarInputStream is = null;
     private static Socket soc = null;
     private static OutputStream os = null;
@@ -43,7 +42,6 @@ public class MinecraftClient {
             soc.connect(new InetSocketAddress(host, port));
             os = soc.getOutputStream();
             final VarInputStream is = new VarInputStream(soc.getInputStream());
-
             HandShakePacket handshake = new HandShakePacket(protocol, host, port, 1);
             os.write(handshake.getData(false));
             os.write(0x01);
@@ -66,72 +64,59 @@ public class MinecraftClient {
     }
 
     public void connect(String username) throws IOException {
-
         soc = new Socket();
         soc.connect(new InetSocketAddress(host, port));
         connected = true;
-
         os = soc.getOutputStream();
         is = new VarInputStream(soc.getInputStream());
         clientPacketSender = new ClientPacketSender(os, this);
         ClientPacketListener listener = new ClientPacketListener(this);
-
         HandShakePacket handshake = new HandShakePacket(protocol, host, port, 2);
         os.write(handshake.getData(false));
-
         ClientLoginRequestPacket login = new ClientLoginRequestPacket(username);
         os.write(login.getData(false));
-
         packetReaderThread = new Thread(new Runnable() {
-
             private final Inflater inflater = new Inflater();
 
             @Override
             public void run() {
-                while (connected) {
-                    try {
-                        int len = is.readVarInt();
-                        byte[] data = new byte[len];
-                        is.readFully(data);
-
-                        VarInputStream packetBuf = new VarInputStream(new ByteArrayInputStream(data));
-                        final int id;
-                        final byte[] packetData;
-
-                        if (compression) {
-                            int dataLen = packetBuf.readVarInt();
-                            if (dataLen == 0) {
-                                id = packetBuf.readVarInt();
-                                packetData = new byte[len - 2];
-                                packetBuf.readFully(packetData);
-                            } else {
-                                byte[] zip = new byte[len - VarOutputStream.checkVarIntSize(dataLen)];
-                                packetBuf.readFully(zip);
-                                byte[] unzip = new byte[dataLen];
-                                inflater.setInput(zip);
-                                inflater.inflate(unzip);
-                                inflater.reset();
-                                packetBuf = new VarInputStream(new ByteArrayInputStream(unzip));
-                                id = packetBuf.readVarInt();
-                                packetData = new byte[dataLen - 1];
-                                packetBuf.readFully(packetData);
-                            }
-                        } else {
+                while (connected) try {
+                    int len = is.readVarInt();
+                    byte[] data = new byte[len];
+                    is.readFully(data);
+                    VarInputStream packetBuf = new VarInputStream(new ByteArrayInputStream(data));
+                    final int id;
+                    final byte[] packetData;
+                    if (compression) {
+                        int dataLen = packetBuf.readVarInt();
+                        if (dataLen == 0) {
                             id = packetBuf.readVarInt();
-                            packetData = new byte[len - 1];
+                            packetData = new byte[len - 2];
+                            packetBuf.readFully(packetData);
+                        } else {
+                            byte[] zip = new byte[len - VarOutputStream.checkVarIntSize(dataLen)];
+                            packetBuf.readFully(zip);
+                            byte[] unzip = new byte[dataLen];
+                            inflater.setInput(zip);
+                            inflater.inflate(unzip);
+                            inflater.reset();
+                            packetBuf = new VarInputStream(new ByteArrayInputStream(unzip));
+                            id = packetBuf.readVarInt();
+                            packetData = new byte[dataLen - 1];
                             packetBuf.readFully(packetData);
                         }
-                        if (id != -1) {
-                            listener.packetReceived(id, packetData);
-                        }
-                    } catch (Exception e) {
-                        closeByE();
+                    } else {
+                        id = packetBuf.readVarInt();
+                        packetData = new byte[len - 1];
+                        packetBuf.readFully(packetData);
                     }
+                    if (id != -1) listener.packetReceived(id, packetData);
+                } catch (Exception e) {
+                    closeByE();
                 }
             }
         });
         packetReaderThread.start();
-
         synchronized (lock) {
             try {
                 lock.wait(5000);
@@ -139,7 +124,6 @@ public class MinecraftClient {
                 e.printStackTrace();
             }
         }
-
     }
 
     public ClientPacketSender getSender() {
@@ -162,20 +146,18 @@ public class MinecraftClient {
         close();
     }
 
-    public void closeByMain(){
+    public void closeByMain() {
         System.out.println("Closing...");
         close();
     }
 
     private void close() {
-        if (soc != null && !soc.isClosed())
-            try {
-                connected = false;
-                play = false;
-                if (packetReaderThread != null)
-                    packetReaderThread.interrupt();
-                soc.close();
-            } catch (IOException ignored) {
-            }
+        connected = false;
+        play = false;
+        if (packetReaderThread != null) packetReaderThread.interrupt();
+        try {
+            if (soc != null && !soc.isClosed()) soc.close();
+        } catch (IOException ignored) {
+        }
     }
 }
