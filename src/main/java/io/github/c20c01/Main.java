@@ -272,17 +272,17 @@ public class Main {
     private static void set() {
         setting = true;
         prLn("""
-                ====================set====================
+                =====================set=====================
                 | Available command:
                 | > host <--------Server's host
                 | > port <--------Server's port
                 | > protocol <----Server's protocol
-                |                 only supports ≥757 (1.18+)
+                |                 only supports >=757 (1.18+)
                 | > username <----Your name
                 | > uuid <--------Your UUID
                 | > token <-------Your AccessToken
                 | > cancel <------Exit this setting mode
-                ==========================================="""
+                ============================================="""
         );
         pr("Set: ");
     }

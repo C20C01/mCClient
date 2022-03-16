@@ -1,6 +1,7 @@
 package io.github.c20c01.tool.proTool;
 
 import io.github.c20c01.Main;
+import io.github.c20c01.tool.ServerInfoTool;
 import io.github.c20c01.tool.TimeTool;
 import io.github.c20c01.tool.proTool.Packets.encryption.Tool;
 import io.github.c20c01.tool.proTool.Packets.general.Out.ClientLoginRequestPacket;
@@ -56,7 +57,7 @@ public class MinecraftClient {
             os.close();
             is.close();
             System.out.println("Found the server...");
-            System.out.println("Info: " + info);
+            ServerInfoTool.readString(info);
             return true;
         } catch (Exception ignored) {
             System.out.println("Can't connect with the server! Please check that the server information is correct.");
