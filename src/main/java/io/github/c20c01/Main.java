@@ -277,7 +277,7 @@ public class Main {
                 | > host <--------Server's host
                 | > port <--------Server's port
                 | > protocol <----Server's protocol
-                |                 only supports 757 (1.18)
+                |                 only supports ≥757 (1.18+)
                 | > username <----Your name
                 | > uuid <--------Your UUID
                 | > token <-------Your AccessToken
