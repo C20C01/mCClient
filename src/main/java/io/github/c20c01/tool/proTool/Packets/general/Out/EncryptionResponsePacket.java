@@ -2,9 +2,9 @@ package io.github.c20c01.tool.proTool.Packets.general.Out;
 
 import io.github.c20c01.tool.proTool.Packets.Packet;
 
-public class ClientEncryptionResponsePacket extends Packet {
+public class EncryptionResponsePacket extends Packet {
 
-    public ClientEncryptionResponsePacket(byte[] secretKey, byte[] verifyToken) {
+    public EncryptionResponsePacket(byte[] secretKey, byte[] verifyToken) {
         super(0x01);
         putVarInt(secretKey.length);
         putBytes(secretKey);

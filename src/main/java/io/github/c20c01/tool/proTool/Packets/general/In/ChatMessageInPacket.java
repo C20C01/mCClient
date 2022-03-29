@@ -10,7 +10,7 @@ import java.io.IOException;
  *
  * @author Defective4
  */
-public class ServerChatMessagePacket extends Packet {
+public class ChatMessageInPacket extends Packet {
 
     /**
      * Chat message position
@@ -35,7 +35,7 @@ public class ServerChatMessagePacket extends Packet {
     private final String message;
     private final byte position;
 
-    public ServerChatMessagePacket(byte[] data) throws IOException {
+    public ChatMessageInPacket(byte[] data) throws IOException {
         super(0x0F, data);
         VarInputStream is = getInputStream();
         this.message = is.readString();

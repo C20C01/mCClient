@@ -9,11 +9,12 @@ import java.util.Scanner;
 
 public class Main {
     private static final Gson gson = new Gson();
+    private static final Scanner sc = new Scanner(System.in);
     private static MinecraftClient client;
     private static String host = "0.0.0.0";
     private static String userName = null;
     private static int port = 25565;
-    private static int protocol = 757;
+    private static int protocol = 758;
     private static boolean commandMode = true;
     private static boolean setting = false;
     private static boolean offlineFirst = true;
@@ -117,8 +118,20 @@ public class Main {
                 case "help" -> help();
                 case "check" -> check();
                 case "close" -> close();
+                case "attack" -> attack();
+                case "showe" -> showEntities();
                 default -> prLn("Unknown command! Type \"help\" to get help.");
             }
+    }
+
+    private static void showEntities() {
+        if (checkPlay())
+            client.showEntities();
+    }
+
+    private static void attack() {
+        if (checkPlay())
+            client.attack();
     }
 
     private static void check() {
@@ -296,21 +309,23 @@ public class Main {
         public String token;
     }
 
+    private static boolean checkPlay() {
+        if (client != null && play)
+            return true;
+        else {
+            prLn("Can't do this! You need to join a server first.");
+            return false;
+        }
+    }
+
     @SuppressWarnings("InfiniteRecursion")
     private static void input() {
-        try (Scanner sc = new Scanner(System.in)) {
+        try {
             String str = sc.nextLine();
             if (str.equals("/cc")) {
-                if (client != null && play)
-                    commandMode();
-                else
-                    prLn("Can't do this! You need to join a server first.");
-                input();
-            }
-            if (!commandMode && client.isConnected()) {
-                client.getSender().clientChatMessagePacket(str);
-            } else
-                command(str);
+                if (checkPlay()) commandMode();
+            } else if (!commandMode && client.isConnected()) client.getSender().ChatMessageOut(str);
+            else command(str);
             input();
         } catch (Exception e) {
             System.out.println("Exception: " + e.getMessage());

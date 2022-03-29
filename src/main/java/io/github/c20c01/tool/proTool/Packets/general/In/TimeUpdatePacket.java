@@ -5,12 +5,12 @@ import io.github.c20c01.tool.proTool.VarInputStream;
 
 import java.io.IOException;
 
-public class ServerTimeUpdatePacket extends Packet {
+public class TimeUpdatePacket extends Packet {
 
     private final long worldAge;
     private final long time;
 
-    public ServerTimeUpdatePacket(byte[] data) throws IOException {
+    public TimeUpdatePacket(byte[] data) throws IOException {
         super(0x59, data);
         VarInputStream is = getInputStream();
         worldAge = is.readLong();

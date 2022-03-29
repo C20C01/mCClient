@@ -1,10 +1,7 @@
 package io.github.c20c01.tool.proTool;
 
 import io.github.c20c01.tool.proTool.Packets.encryption.Tool;
-import io.github.c20c01.tool.proTool.Packets.general.Out.ClientChatMessagePacket;
-import io.github.c20c01.tool.proTool.Packets.general.Out.ClientEncryptionResponsePacket;
-import io.github.c20c01.tool.proTool.Packets.general.Out.ClientKeepAlivePacket;
-import io.github.c20c01.tool.proTool.Packets.general.Out.ClientRespawnPacket;
+import io.github.c20c01.tool.proTool.Packets.general.Out.*;
 
 import javax.crypto.CipherOutputStream;
 import javax.crypto.SecretKey;
@@ -28,23 +25,42 @@ public class ClientPacketSender {
         if (needEncryption) os = new CipherOutputStream(os, Tool.getCipher(1, secretkey));
     }
 
-    public void clientRespawnPacket() throws IOException {
-        ClientRespawnPacket Packet = new ClientRespawnPacket();
+    public void TeleportConfirm(int tpID) throws IOException {
+        TeleportConfirmPacket Packet = new TeleportConfirmPacket(tpID);
         os.write(Packet.getData(client.compression));
     }
 
-    public void clientKeepAlivePacket(long aliveId) throws IOException {
-        ClientKeepAlivePacket Packet = new ClientKeepAlivePacket(aliveId);
+    public void PlayerRotation(float yaw,float pitch,boolean onGround) throws IOException {
+        PlayerRotationPacket Packet=new PlayerRotationPacket(yaw, pitch, onGround);
+        os.write(Packet.getData(client.compression));
+    }
+
+    public void Attack(int ID) throws IOException {
+        InteractEntity(ID,1,false);
+    }
+
+    public void InteractEntity(int ID, int type, boolean sneaking) throws IOException {
+        InteractEntityPacket Packet = new InteractEntityPacket(ID, type, sneaking);
+        os.write(Packet.getData(client.compression));
+    }
+
+    public void Respawn() throws IOException {
+        RespawnPacket Packet = new RespawnPacket();
+        os.write(Packet.getData(client.compression));
+    }
+
+    public void KeepAliveOut(long aliveId) throws IOException {
+        KeepAliveOutPacket Packet = new KeepAliveOutPacket(aliveId);
         os.write(Packet.getData(client.compression));
         //System.out.println("KeepAlivePacket Out!");
     }
 
-    public void clientChatMessagePacket(String message) throws IOException {
-        ClientChatMessagePacket Packet = new ClientChatMessagePacket(message);
+    public void ChatMessageOut(String message) throws IOException {
+        ChatMessageOutPacket Packet = new ChatMessageOutPacket(message);
         os.write(Packet.getData(client.compression));
     }
 
-    public void clientEncryptionResponsePacket(String serverId, byte[] publicKey, byte[] verifyToken) throws Exception {
+    public void EncryptionResponse(String serverId, byte[] publicKey, byte[] verifyToken) throws Exception {
         secretkey = Tool.generateSecretKey();
         client.setSecretKey(secretkey);
         needEncryption = true;
@@ -55,7 +71,7 @@ public class ClientPacketSender {
         Tool.login(serverID);
         byte[] secretKeyByte = Tool.encryptUsingKey(publickey, secretkey.getEncoded());
         byte[] verifyTokenByte = Tool.encryptUsingKey(publickey, verifyToken);
-        ClientEncryptionResponsePacket Packet = new ClientEncryptionResponsePacket(secretKeyByte, verifyTokenByte);
+        EncryptionResponsePacket Packet = new EncryptionResponsePacket(secretKeyByte, verifyTokenByte);
         os.write(Packet.getData(false));
     }
 }

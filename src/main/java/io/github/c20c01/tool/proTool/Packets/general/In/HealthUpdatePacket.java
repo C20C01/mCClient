@@ -5,13 +5,13 @@ import io.github.c20c01.tool.proTool.VarInputStream;
 
 import java.io.IOException;
 
-public class ServerUpdateHealthPacket extends Packet {
+public class HealthUpdatePacket extends Packet {
 
     private final float health;
     private final int food;
     private final float saturation;
 
-    public ServerUpdateHealthPacket(byte[] data) throws IOException {
+    public HealthUpdatePacket(byte[] data) throws IOException {
         super(0x52, data);
         VarInputStream is = getInputStream();
         health = is.readFloat();

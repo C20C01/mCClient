@@ -5,12 +5,12 @@ import io.github.c20c01.tool.proTool.VarInputStream;
 
 import java.io.IOException;
 
-public class ServerLoginSuccessPacket extends Packet {
+public class LoginSuccessPacket extends Packet {
 
     private final String uuid;
     private final String username;
 
-    public ServerLoginSuccessPacket(byte[] data) throws IOException {
+    public LoginSuccessPacket(byte[] data) throws IOException {
         super(0x02,data);
         VarInputStream is = getInputStream();
         uuid = is.readUUID().toString();

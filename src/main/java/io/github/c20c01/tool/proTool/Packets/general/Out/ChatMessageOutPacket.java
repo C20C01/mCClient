@@ -7,9 +7,9 @@ import io.github.c20c01.tool.proTool.Packets.Packet;
  *
  * @author Defective4
  */
-public class ClientChatMessagePacket extends Packet {
+public class ChatMessageOutPacket extends Packet {
 
-    public ClientChatMessagePacket(String message) {
+    public ChatMessageOutPacket(String message) {
         super(0x03);
         putString(message);
     }
