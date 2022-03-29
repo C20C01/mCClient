@@ -32,7 +32,7 @@ public class MinecraftClient {
     private Thread packetReaderThread = null;
     private ClientPacketSender clientPacketSender = null;
     private final ArrayList<NearByEntity> nearbyEntities = new ArrayList<>();
-    public String DisconnectReason = "Unknown";
+    public String DisconnectReason = "";
     public Position playerPos;
 
     public MinecraftClient(String host, int port, int protocol) {
@@ -146,7 +146,7 @@ public class MinecraftClient {
 
     private void closeByE() {
         TimeTool.printTime("\n");
-        System.out.println("Connection closed!\n" + "Reason: " + DisconnectReason);
+        System.out.println("Connection closed!\n" + DisconnectReason);
         Main.closeFromClient();
         close();
     }
