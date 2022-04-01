@@ -2,27 +2,29 @@ package io.github.c20c01.tool.proTool.Packets.general.Out;
 
 import io.github.c20c01.tool.proTool.Packets.Packet;
 
-import java.io.IOException;
-
 public class InteractEntityPacket extends Packet {
-    public InteractEntityPacket(int id, int type, boolean sneaking){
+    public InteractEntityPacket(int id, Type type, boolean sneaking) {
         super(0x0D);
         putVarInt(id);
-        putVarInt(type);
+        putVarInt(type.ordinal());
         putBoolean(sneaking);
     }
 
-    public InteractEntityPacket(int id, int type, float tX, float tY, float tZ, int hand, boolean sneaking){
+    public InteractEntityPacket(int id, Type type, float tX, float tY, float tZ, Hand hand, boolean sneaking) {
         super(0x0D);
         putVarInt(id);
-        putVarInt(type);
-        if (type == 2) {
+        putVarInt(type.ordinal());
+        if (type == Type.InteractAt) {
             putFloat(tX);
             putFloat(tY);
             putFloat(tZ);
-            putVarInt(hand);
+            putVarInt(hand.ordinal());
         }
-        if (type == 0) putVarInt(hand);
+        if (type == Type.Interact) putVarInt(hand.ordinal());
+        putBoolean(sneaking);
     }
 
+    public enum Type {Interact, Attack, InteractAt}
+
+    public enum Hand {MainHand, OffHand}
 }

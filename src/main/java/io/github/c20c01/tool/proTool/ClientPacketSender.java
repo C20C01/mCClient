@@ -1,5 +1,6 @@
 package io.github.c20c01.tool.proTool;
 
+import io.github.c20c01.tool.Position;
 import io.github.c20c01.tool.proTool.Packets.encryption.Tool;
 import io.github.c20c01.tool.proTool.Packets.general.Out.*;
 
@@ -21,45 +22,6 @@ public class ClientPacketSender {
         this.client = client;
     }
 
-    public void EnableEncryption() throws Exception {
-        if (needEncryption) os = new CipherOutputStream(os, Tool.getCipher(1, secretkey));
-    }
-
-    public void TeleportConfirm(int tpID) throws IOException {
-        TeleportConfirmPacket Packet = new TeleportConfirmPacket(tpID);
-        os.write(Packet.getData(client.compression));
-    }
-
-    public void PlayerRotation(float yaw,float pitch,boolean onGround) throws IOException {
-        PlayerRotationPacket Packet=new PlayerRotationPacket(yaw, pitch, onGround);
-        os.write(Packet.getData(client.compression));
-    }
-
-    public void Attack(int ID) throws IOException {
-        InteractEntity(ID,1,false);
-    }
-
-    public void InteractEntity(int ID, int type, boolean sneaking) throws IOException {
-        InteractEntityPacket Packet = new InteractEntityPacket(ID, type, sneaking);
-        os.write(Packet.getData(client.compression));
-    }
-
-    public void Respawn() throws IOException {
-        RespawnPacket Packet = new RespawnPacket();
-        os.write(Packet.getData(client.compression));
-    }
-
-    public void KeepAliveOut(long aliveId) throws IOException {
-        KeepAliveOutPacket Packet = new KeepAliveOutPacket(aliveId);
-        os.write(Packet.getData(client.compression));
-        //System.out.println("KeepAlivePacket Out!");
-    }
-
-    public void ChatMessageOut(String message) throws IOException {
-        ChatMessageOutPacket Packet = new ChatMessageOutPacket(message);
-        os.write(Packet.getData(client.compression));
-    }
-
     public void EncryptionResponse(String serverId, byte[] publicKey, byte[] verifyToken) throws Exception {
         secretkey = Tool.generateSecretKey();
         client.setSecretKey(secretkey);
@@ -71,7 +33,51 @@ public class ClientPacketSender {
         Tool.login(serverID);
         byte[] secretKeyByte = Tool.encryptUsingKey(publickey, secretkey.getEncoded());
         byte[] verifyTokenByte = Tool.encryptUsingKey(publickey, verifyToken);
-        EncryptionResponsePacket Packet = new EncryptionResponsePacket(secretKeyByte, verifyTokenByte);
-        os.write(Packet.getData(false));
+        EncryptionResponsePacket packet = new EncryptionResponsePacket(secretKeyByte, verifyTokenByte);
+        os.write(packet.getData(false));
+    }
+
+    public void EnableEncryption() throws Exception {
+        if (needEncryption) os = new CipherOutputStream(os, Tool.getCipher(1, secretkey));
+    }
+
+    public void KeepAliveOut(long aliveId) throws IOException {
+        KeepAliveOutPacket packet = new KeepAliveOutPacket(aliveId);
+        os.write(packet.getData(client.compression));
+        //Main.output("KeepAlivePacket Out!");
+    }
+
+    public void Respawn() throws IOException {
+        RespawnPacket packet = new RespawnPacket();
+        os.write(packet.getData(client.compression));
+    }
+
+    public void ChatMessageOut(String message) throws IOException {
+        ChatMessageOutPacket packet = new ChatMessageOutPacket(message);
+        os.write(packet.getData(client.compression));
+    }
+
+    public void TeleportConfirm(int tpID) throws IOException {
+        TeleportConfirmPacket packet = new TeleportConfirmPacket(tpID);
+        os.write(packet.getData(client.compression));
+    }
+
+    public void PlayerRotation(float yaw, float pitch, boolean onGround) throws IOException {
+        PlayerRotationPacket packet = new PlayerRotationPacket(yaw, pitch, onGround);
+        os.write(packet.getData(client.compression));
+    }
+
+    public void Attack(int ID) throws IOException {
+        InteractEntity(ID, InteractEntityPacket.Type.Attack, false);
+    }
+
+    public void InteractEntity(int ID, InteractEntityPacket.Type type, boolean sneaking) throws IOException {
+        InteractEntityPacket packet = new InteractEntityPacket(ID, type, sneaking);
+        os.write(packet.getData(client.compression));
+    }
+
+    public void PlayerDigging(PlayerDiggingPacket.Status status, Position position, PlayerDiggingPacket.Face face) throws IOException {
+        PlayerDiggingPacket packet = new PlayerDiggingPacket(status, position, face);
+        os.write(packet.getData(client.compression));
     }
 }

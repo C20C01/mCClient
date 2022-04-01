@@ -18,7 +18,11 @@ public class PositionTool {
         return res;
     }
 
-    public static Position getCurrent(Position delta , Position prev) {
+    public static Position getCurrent(Position delta, Position prev) {
         return new Position((delta.x() / 128 + prev.x() * 32) / 32, (delta.y() / 128 + prev.y() * 32) / 32, (delta.z() / 128 + prev.z() * 32) / 32);
+    }
+
+    public static long getPosition(Position position) {
+        return (((long) position.x() & 0x3FFFFFF) << 38) | (((long) position.z() & 0x3FFFFFF) << 12) | ((long) position.y() & 0xFFF);
     }
 }

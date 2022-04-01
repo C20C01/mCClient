@@ -5,6 +5,7 @@ import io.github.c20c01.tool.*;
 import io.github.c20c01.tool.proTool.Packets.encryption.Tool;
 import io.github.c20c01.tool.proTool.Packets.general.Out.HandShakePacket;
 import io.github.c20c01.tool.proTool.Packets.general.Out.LoginRequestPacket;
+import io.github.c20c01.tool.proTool.Packets.general.Out.PlayerDiggingPacket;
 
 import javax.crypto.CipherInputStream;
 import javax.crypto.SecretKey;
@@ -30,7 +31,7 @@ public class MinecraftClient {
     private boolean connected = false;
     public boolean play = false;
     private Thread packetReaderThread = null;
-    private ClientPacketSender clientPacketSender = null;
+    private ClientPacketSender sender = null;
     private final ArrayList<NearByEntity> nearbyEntities = new ArrayList<>();
     public String DisconnectReason = "";
     public Position playerPos;
@@ -59,11 +60,11 @@ public class MinecraftClient {
             soc.close();
             os.close();
             is.close();
-            System.out.println("Found the server...");
+            Main.output("Found the server...", true);
             ServerInfoTool.readString(info);
             return true;
         } catch (Exception ignored) {
-            System.out.println("Can't connect with the server! Please check that the server information is correct.");
+            Main.output("Can't connect with the server! Please check that the server information is correct.", true);
         }
         return false;
     }
@@ -74,7 +75,7 @@ public class MinecraftClient {
         connected = true;
         os = soc.getOutputStream();
         is = new VarInputStream(soc.getInputStream());
-        clientPacketSender = new ClientPacketSender(os, this);
+        sender = new ClientPacketSender(os, this);
         ClientPacketListener listener = new ClientPacketListener(this);
         HandShakePacket handshake = new HandShakePacket(protocol, host, port, 2);
         os.write(handshake.getData(false));
@@ -131,8 +132,12 @@ public class MinecraftClient {
         }
     }
 
+    public void LoginSuccess() {
+        Main.LoginSuccess();
+    }
+
     public ClientPacketSender getSender() {
-        return clientPacketSender;
+        return sender;
     }
 
     public boolean isConnected() {
@@ -145,20 +150,20 @@ public class MinecraftClient {
     }
 
     private void closeByE() {
-        TimeTool.printTime("\n");
-        System.out.println("Connection closed!\n" + DisconnectReason);
+        connected = false;
         Main.closeFromClient();
+        Main.output("\n" + TimeTool.getTime() + "Connection closed!\n" + DisconnectReason, true);
         close();
     }
 
-    public void closeByMain() {
-        System.out.println("Closing...");
+    public void closeFromMain() {
+        connected = false;
+        Main.output("Closing...", true);
         DisconnectReason = "Disconnect by yourself.";
         close();
     }
 
     private void close() {
-        connected = false;
         play = false;
         nearbyEntities.clear();
         if (packetReaderThread != null) packetReaderThread.interrupt();
@@ -177,10 +182,9 @@ public class MinecraftClient {
     }
 
     public void showEntities() {
-        TimeTool.printTime();
-        System.out.println("Number of nearby entity: " + nearbyEntities.size());
-        for (NearByEntity n : nearbyEntities) System.out.println(n.toString());
-        System.out.println();
+        Main.output(TimeTool.getTime() + "Number of nearby entity: " + nearbyEntities.size());
+        for (NearByEntity n : nearbyEntities) Main.output(n.toString());
+        Main.output("");
     }
 
     public void entityMove(int entityID, Position pos) {
@@ -204,15 +208,14 @@ public class MinecraftClient {
     private boolean attacking = false;
     private Timer timer;
 
-    public void attack() {
+    public boolean isAttacking() {
+        return attacking;
+    }
+
+    public void attack(boolean attack) {
         final ArrayList<NearByEntity> nearbyLivingEntity = new ArrayList<>();
-        if (attacking) {
-            timer.cancel();
-            attacking = false;
-            System.out.println("cancel");
-        } else {
-            attacking = true;
-            System.out.println("gogo");
+        attacking = attack;
+        if (attack) {
             timer = new Timer();
             timer.schedule(new TimerTask() {
                 public void run() {
@@ -220,7 +223,7 @@ public class MinecraftClient {
                     for (NearByEntity n : nearbyLivingEntity)
                         if (n.getDis() < 8) {
                             try {
-                                clientPacketSender.Attack(n.getID());
+                                sender.Attack(n.getID());
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
@@ -236,7 +239,7 @@ public class MinecraftClient {
 
                         float[] rotation = PositionTool.getRotation(nearestEntity.getPosition(), playerPos);
                         try {
-                            clientPacketSender.PlayerRotation(rotation[0], rotation[1], true);
+                            sender.PlayerRotation(rotation[0], rotation[1], true);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -245,6 +248,10 @@ public class MinecraftClient {
                     }
                 }
             }, 1000, 100);
-        }
+        } else timer.cancel();
+    }
+
+    public void dig() throws IOException {
+        sender.PlayerDigging(PlayerDiggingPacket.Status.Started, new Position(1, 1, 1), PlayerDiggingPacket.Face.Bottom);
     }
 }

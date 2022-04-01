@@ -6,17 +6,9 @@ import java.util.Date;
 public class TimeTool {
     private static final SimpleDateFormat sdf = new SimpleDateFormat("[HH:mm:ss]");
 
-    public static void printTime() {
-        System.out.print(getTime() + " ");
-    }
-
-    public static void printTime(String head) {
-        System.out.print(head + getTime() + " ");
-    }
-
-    private static String getTime() {
+    public static String getTime() {
         Date date = new Date();
-        return sdf.format(date);
+        return sdf.format(date) + " ";
     }
 
 }

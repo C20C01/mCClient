@@ -1,3 +1,2 @@
 Manifest-Version: 1.0
 Main-Class: io.github.c20c01.Main
-

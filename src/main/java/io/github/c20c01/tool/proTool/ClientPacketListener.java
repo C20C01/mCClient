@@ -1,5 +1,6 @@
 package io.github.c20c01.tool.proTool;
 
+import io.github.c20c01.Main;
 import io.github.c20c01.tool.MessageTool;
 import io.github.c20c01.tool.NearByEntity;
 import io.github.c20c01.tool.PositionTool;
@@ -44,101 +45,98 @@ public class ClientPacketListener {
         }
     }
 
-    private void EntityTeleport(byte[] data) throws IOException {
-        EntityTeleportPacket Packet=new EntityTeleportPacket(data);
-        client.entityTP(Packet.getEntityID(), Packet.getPos());
+    private void LoginSuccess(byte[] data) throws Exception {
+        LoginSuccessPacket packet = new LoginSuccessPacket(data);
+        Main.output("Username: " + packet.getUsername(), true);
+        Main.output("Uuid: " + packet.getUuid(), true);
+        play = true;
+        Main.output("\nSuccessfully joined the server!\n", true);
+        client.LoginSuccess();
+        if (encryption) sender.EnableEncryption();
     }
 
-    private void EntityPositionAndRotation(byte[] data) throws IOException {
-        EntityPositionAndRotationPacket Packet=new EntityPositionAndRotationPacket(data);
-        client.entityMove(Packet.getEntityID(), Packet.getPos());
-    }
-
-    private void EntityPosition(byte[] data) throws IOException {
-        EntityPositionPacket Packet = new EntityPositionPacket(data);
-        client.entityMove(Packet.getEntityID(), Packet.getPos());
-    }
-
-    private void PlayerPositionAndLook(byte[] data) throws IOException {
-        PlayerPositionAndLookPacket Packet = new PlayerPositionAndLookPacket(data);
-        System.out.println(Packet.getPos());
-        client.playerPos = Packet.getPos();
-        sender.TeleportConfirm(Packet.getTpID());
-    }
-
-    private void Disconnect(byte[] data) throws IOException {
-        DisconnectPacket Packet = new DisconnectPacket(data);
-        client.DisconnectReason = Packet.getReason();
-    }
-
-    private void DestroyEntities(byte[] data) throws IOException {
-        DestroyEntitiesPacket Packet = new DestroyEntitiesPacket(data);
-        client.destroyEntities(Packet.getIDs());
-    }
-
-    private void SpawnLivingEntity(byte[] data) throws IOException {
-        SpawnLivingEntityPacket Packet = new SpawnLivingEntityPacket(data);
-        client.addEntities(new NearByEntity(Packet.getID(), Packet.getUuid(), Packet.getType(),
-                Packet.getPos(), true, PositionTool.getDis(client.playerPos, Packet.getPos())));
-    }
-
-    private void SpawnEntity(byte[] data) throws IOException {
-        SpawnEntityPacket Packet = new SpawnEntityPacket(data);
-        client.addEntities(new NearByEntity(Packet.getID(), Packet.getUuid(), Packet.getType(),
-                Packet.getPos(), false, PositionTool.getDis(client.playerPos, Packet.getPos())));
-    }
-
-    private void respawn() {
-        System.out.println();
-        TimeTool.printTime();
-        System.out.println("Respawn!");
+    private void LoginSetCompression(byte[] data) throws IOException {
+        LoginSetCompressionPacket packet = new LoginSetCompressionPacket(data);
+        Main.output("Maximum size: " + packet.getThreshold(), true);
+        client.compression = true;
     }
 
     private void EncryptionRequest(byte[] data) throws Exception {
-        EncryptionRequestPacket Packet = new EncryptionRequestPacket(data);
+        EncryptionRequestPacket packet = new EncryptionRequestPacket(data);
         encryption = true;
-        sender.EncryptionResponse(Packet.getServerId(), Packet.getPublicKey(), Packet.getVerifyToken());
+        sender.EncryptionResponse(packet.getServerId(), packet.getPublicKey(), packet.getVerifyToken());
     }
 
-    private static final DecimalFormat sdf = new DecimalFormat("##.#");
-
-    private void HealthUpdate(byte[] data) throws IOException {
-        HealthUpdatePacket Packet = new HealthUpdatePacket(data);
-        TimeTool.printTime();
-        System.out.println("Food: " + Packet.getFood() + ", Health: " + sdf.format(Packet.getHealth()));
+    private void respawn() {
+        Main.output("\n" + TimeTool.getTime() + "Respawn!");
     }
 
-    private void TimeUpdate(byte[] data) throws IOException {
-        TimeUpdatePacket Packet = new TimeUpdatePacket(data); /*System.out.println("Time: " + Packet.getTime());*/
+    private void KeepAliveIn(byte[] data) throws IOException {
+        KeepAliveInPacket packet = new KeepAliveInPacket(data);
+        sender.KeepAliveOut(packet.getAliveId());
+    }
+
+    private void ChatMessageIn(byte[] data) throws IOException {
+        ChatMessageInPacket packet = new ChatMessageInPacket(data);
+        Main.output(TimeTool.getTime() + MessageTool.readString(packet.getMessage()));
     }
 
     private void PlayerDies() throws IOException {
         sender.Respawn();
     }
 
-    private void ChatMessageIn(byte[] data) throws IOException {
-        ChatMessageInPacket Packet = new ChatMessageInPacket(data);
-        TimeTool.printTime();
-        System.out.println(MessageTool.readString(Packet.getMessage()));
+    private void TimeUpdate(byte[] data) throws IOException {
+        TimeUpdatePacket packet = new TimeUpdatePacket(data); /*Main.output("Time: " + packet.getTime());*/
     }
 
-    private void KeepAliveIn(byte[] data) throws IOException {
-        KeepAliveInPacket Packet = new KeepAliveInPacket(data);
-        sender.KeepAliveOut(Packet.getAliveId());
+    private static final DecimalFormat sdf = new DecimalFormat("##.#");
+
+    private void HealthUpdate(byte[] data) throws IOException {
+        HealthUpdatePacket packet = new HealthUpdatePacket(data);
+        Main.output(TimeTool.getTime() + "Food: " + packet.getFood() + ", Health: " + sdf.format(packet.getHealth()));
     }
 
-    private void LoginSuccess(byte[] data) throws Exception {
-        LoginSuccessPacket Packet = new LoginSuccessPacket(data);
-        System.out.println("Username: " + Packet.getUsername());
-        System.out.println("Uuid: " + Packet.getUuid());
-        play = true;
-        System.out.println("\nSuccessfully joined the server!\n");
-        if (encryption) sender.EnableEncryption();
+    private void SpawnEntity(byte[] data) throws IOException {
+        SpawnEntityPacket packet = new SpawnEntityPacket(data);
+        client.addEntities(new NearByEntity(packet.getID(), packet.getUuid(), packet.getType(),
+                packet.getPos(), false, PositionTool.getDis(client.playerPos, packet.getPos())));
     }
 
-    private void LoginSetCompression(byte[] data) throws IOException {
-        LoginSetCompressionPacket Packet = new LoginSetCompressionPacket(data);
-        System.out.println("Maximum size: " + Packet.getThreshold());
-        client.compression = true;
+    private void SpawnLivingEntity(byte[] data) throws IOException {
+        SpawnLivingEntityPacket packet = new SpawnLivingEntityPacket(data);
+        client.addEntities(new NearByEntity(packet.getID(), packet.getUuid(), packet.getType(),
+                packet.getPos(), true, PositionTool.getDis(client.playerPos, packet.getPos())));
+    }
+
+    private void DestroyEntities(byte[] data) throws IOException {
+        DestroyEntitiesPacket packet = new DestroyEntitiesPacket(data);
+        client.destroyEntities(packet.getIDs());
+    }
+
+    private void Disconnect(byte[] data) throws IOException {
+        DisconnectPacket packet = new DisconnectPacket(data);
+        client.DisconnectReason = packet.getReason();
+    }
+
+    private void PlayerPositionAndLook(byte[] data) throws IOException {
+        PlayerPositionAndLookPacket packet = new PlayerPositionAndLookPacket(data);
+        Main.output(packet.getPos().toString());
+        client.playerPos = packet.getPos();
+        sender.TeleportConfirm(packet.getTpID());
+    }
+
+    private void EntityPosition(byte[] data) throws IOException {
+        EntityPositionPacket packet = new EntityPositionPacket(data);
+        client.entityMove(packet.getEntityID(), packet.getPos());
+    }
+
+    private void EntityPositionAndRotation(byte[] data) throws IOException {
+        EntityPositionAndRotationPacket packet = new EntityPositionAndRotationPacket(data);
+        client.entityMove(packet.getEntityID(), packet.getPos());
+    }
+
+    private void EntityTeleport(byte[] data) throws IOException {
+        EntityTeleportPacket packet = new EntityTeleportPacket(data);
+        client.entityTP(packet.getEntityID(), packet.getPos());
     }
 }

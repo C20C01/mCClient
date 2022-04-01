@@ -1,6 +1,7 @@
 package io.github.c20c01.tool.proTool.Packets.encryption;
 
 import com.google.gson.Gson;
+import io.github.c20c01.Main;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -44,9 +45,9 @@ public class Tool {
         request.selectedProfile = uuid;
         request.serverId = Id;
         URL url = new URL("https://sessionserver.mojang.com/session/minecraft/join");
-        System.out.println("server has authentication enabled.");
-        System.out.println("sending the verification data.");
-        System.out.println(performPostRequest(url, gson.toJson(request), "application/json") ? "verification succeeded." : "verification failed.");
+        Main.output("server has authentication enabled.", true);
+        Main.output("sending the verification data.", true);
+        Main.output(performPostRequest(url, gson.toJson(request), "application/json") ? "verification succeeded." : "verification failed.", true);
     }
 
     public static boolean performPostRequest(final URL url, final String post, final String contentType) {
