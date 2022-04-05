@@ -40,6 +40,8 @@ public class ChatMessageInPacket extends Packet {
         VarInputStream is = getInputStream();
         this.message = is.readString();
         this.position = is.readByte();
+        is.close();
+        close();
     }
 
     /**

@@ -15,6 +15,8 @@ public class DestroyEntitiesPacket extends Packet {
         for (int i = 0; i < num; i++) {
             IDs[i]=is.readVarInt();
         }
+        is.close();
+        close();
     }
 
     public int[] getIDs() {

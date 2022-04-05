@@ -17,6 +17,8 @@ public class HealthUpdatePacket extends Packet {
         health = is.readFloat();
         food = is.readVarInt();
         saturation = is.readFloat();
+        is.close();
+        close();
     }
 
     public float getHealth() {

@@ -27,14 +27,14 @@ public class MinecraftClient {
     private VarInputStream is = null;
     private static Socket soc = null;
     private static OutputStream os = null;
-    public boolean compression = false;
     private boolean connected = false;
-    public boolean play = false;
     private Thread packetReaderThread = null;
-    private ClientPacketSender sender = null;
-    private final ArrayList<NearByEntity> nearbyEntities = new ArrayList<>();
+    public boolean compression = false;
+    public boolean play = false;
+    public ClientPacketSender sender = null;
     public String DisconnectReason = "";
     public Position playerPos;
+    public EntityTool entityTool = null;
 
     public MinecraftClient(String host, int port, int protocol) {
         this.host = host;
@@ -70,6 +70,7 @@ public class MinecraftClient {
     }
 
     public void connect(String username) throws IOException {
+        entityTool = new EntityTool(this);
         soc = new Socket();
         soc.connect(new InetSocketAddress(host, port));
         connected = true;
@@ -117,8 +118,13 @@ public class MinecraftClient {
                         packetBuf.readFully(packetData);
                     }
                     if (id != -1) listener.packetReceived(id, packetData);
+                    packetBuf.close();
                 } catch (Exception e) {
-                    closeByE();
+                    try {
+                        closeByE();
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
                 }
             }
         });
@@ -136,10 +142,6 @@ public class MinecraftClient {
         Main.LoginSuccess();
     }
 
-    public ClientPacketSender getSender() {
-        return sender;
-    }
-
     public boolean isConnected() {
         return connected;
     }
@@ -149,60 +151,30 @@ public class MinecraftClient {
         is = new VarInputStream(cipherIS);
     }
 
-    private void closeByE() {
+    private void closeByE() throws IOException {
         connected = false;
         Main.closeFromClient();
         Main.output("\n" + TimeTool.getTime() + "Connection closed!\n" + DisconnectReason, true);
         close();
     }
 
-    public void closeFromMain() {
+    public void closeFromMain() throws IOException {
         connected = false;
         Main.output("Closing...", true);
         DisconnectReason = "Disconnect by yourself.";
         close();
     }
 
-    private void close() {
+    private void close() throws IOException {
         play = false;
-        nearbyEntities.clear();
+        is.close();
+        os.close();
+        entityTool.close();
         if (packetReaderThread != null) packetReaderThread.interrupt();
         try {
             if (soc != null && !soc.isClosed()) soc.close();
         } catch (IOException ignored) {
         }
-    }
-
-    public void addEntities(NearByEntity n) {
-        nearbyEntities.add(n);
-    }
-
-    public void destroyEntities(int[] IDs) {
-        for (int id : IDs) nearbyEntities.removeIf(n -> n.getID() == id);
-    }
-
-    public void showEntities() {
-        Main.output(TimeTool.getTime() + "Number of nearby entity: " + nearbyEntities.size());
-        for (NearByEntity n : nearbyEntities) Main.output(n.toString());
-        Main.output("");
-    }
-
-    public void entityMove(int entityID, Position pos) {
-        for (NearByEntity n : nearbyEntities)
-            if (n.getID() == entityID) {
-                n.setPosition(PositionTool.getCurrent(pos, n.getPosition()));
-                n.setDis(PositionTool.getDis(playerPos, n.getPosition()));
-                break;
-            }
-    }
-
-    public void entityTP(int entityID, Position pos) {
-        for (NearByEntity n : nearbyEntities)
-            if (n.getID() == entityID) {
-                n.setPosition(pos);
-                n.setDis(PositionTool.getDis(playerPos, n.getPosition()));
-                break;
-            }
     }
 
     private boolean attacking = false;
@@ -213,42 +185,38 @@ public class MinecraftClient {
     }
 
     public void attack(boolean attack) {
-        final ArrayList<NearByEntity> nearbyLivingEntity = new ArrayList<>();
         attacking = attack;
         if (attack) {
             timer = new Timer();
             timer.schedule(new TimerTask() {
                 public void run() {
-                    for (NearByEntity n : nearbyEntities) if (n.isLiving()) nearbyLivingEntity.add(n);
-                    for (NearByEntity n : nearbyLivingEntity)
-                        if (n.getDis() < 8) {
-                            try {
-                                sender.Attack(n.getID());
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    if (nearbyLivingEntity.size() > 0) {
-                        NearByEntity nearestEntity = nearbyLivingEntity.get(0);
-                        double dis = nearestEntity.getDis();
-                        for (NearByEntity e : nearbyLivingEntity)
-                            if (e.getDis() < dis) {
-                                dis = e.getDis();
-                                nearestEntity = e;
-                            }
+                    ArrayList<Entity> livingEList = entityTool.getLivingEList();
+                    try {
+                        for (Entity n : livingEList)
+                            sender.Attack(n.getID());
 
-                        float[] rotation = PositionTool.getRotation(nearestEntity.getPosition(), playerPos);
-                        try {
-                            sender.PlayerRotation(rotation[0], rotation[1], true);
-                        } catch (IOException e) {
-                            e.printStackTrace();
+                        Entity closestE = entityTool.getClosestE(livingEList);
+                        if (closestE != null) {
+                            lookAt(closestE.getPosition());
+                            closestE = null;
                         }
-                        nearbyLivingEntity.clear();
-
+                    } catch (IOException e) {
+                        attack(false);
+                        Main.output("Stopped attacking!", true);
                     }
+                    livingEList.clear();
                 }
-            }, 1000, 100);
+            }, 1000, 200);
         } else timer.cancel();
+    }
+
+    public void lookAt(Position position) {
+        float[] rotation = PositionTool.getRotation(position, playerPos);
+        try {
+            sender.PlayerRotation(rotation[0], rotation[1], true);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void dig() throws IOException {

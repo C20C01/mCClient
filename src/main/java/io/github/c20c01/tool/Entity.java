@@ -2,7 +2,7 @@ package io.github.c20c01.tool;
 
 import java.util.UUID;
 
-public class NearByEntity {
+public class Entity {
     private int ID, type;
     private UUID uuid;
     private Position position;
@@ -10,7 +10,7 @@ public class NearByEntity {
     private double dis;
 
 
-    public NearByEntity(int ID, UUID uuid, int type, Position position, boolean living, double dis) {
+    public Entity(int ID, UUID uuid, int type, Position position, boolean living, double dis) {
         this.ID = ID;
         this.uuid = uuid;
         this.type = type;

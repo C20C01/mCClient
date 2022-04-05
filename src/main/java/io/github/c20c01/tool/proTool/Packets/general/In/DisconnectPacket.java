@@ -12,6 +12,8 @@ public class DisconnectPacket extends Packet {
         super(0x1A, data);
         VarInputStream is = getInputStream();
         reason = is.readString();
+        is.close();
+        close();
     }
 
     public String getReason() {

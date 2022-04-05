@@ -22,6 +22,8 @@ public class EntityTeleportPacket extends Packet {
         yaw = is.readByte();
         pitch = is.readByte();
         onGround = is.readBoolean();
+        is.close();
+        close();
     }
 
     public int getEntityID() {

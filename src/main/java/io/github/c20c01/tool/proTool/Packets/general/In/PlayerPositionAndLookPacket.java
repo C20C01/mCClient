@@ -24,6 +24,8 @@ public class PlayerPositionAndLookPacket extends Packet {
         flags = is.readByte();
         tpID = is.readVarInt();
         dismountVehicle = is.readBoolean();
+        is.close();
+        close();
     }
 
     public double getX() {

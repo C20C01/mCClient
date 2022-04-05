@@ -138,12 +138,12 @@ public class Main {
     }
 
     @SuppressWarnings("InfiniteRecursion")
-    private static void input() {
+    private static void input() throws IOException {
         try {
             String str = sc.nextLine();
             if (str.equals("/cc")) {
                 if (checkPlay()) commandMode();
-            } else if (!commandMode && client.isConnected()) client.getSender().ChatMessageOut(str);
+            } else if (!commandMode && client.isConnected()) client.sender.ChatMessageOut(str);
             else command(str);
             input();
         } catch (Exception e) {
@@ -327,7 +327,7 @@ public class Main {
     }
 
     private static void runMinecraftClient() throws IOException {
-        if (!client.isConnected()) {
+        if (client == null || !client.isConnected()) {
             client = new MinecraftClient(host, port, protocol);
             if (client.ping()) client.connect(userName);
         } else prLn("Multi-role control is not currently supported!");
@@ -364,7 +364,7 @@ public class Main {
         if (!commandMode) commandMode(true);
     }
 
-    private static void close() {
+    private static void close() throws IOException {
         if (play) {
             client.closeFromMain();
             play = false;
@@ -383,7 +383,7 @@ public class Main {
 
     private static void sending(String s) throws IOException {
         if (client.isConnected()) {
-            client.getSender().ChatMessageOut(s);
+            client.sender.ChatMessageOut(s);
             prLn("Done!");
         } else prLn("Wrong!");
         finishWaiting();
@@ -417,7 +417,7 @@ public class Main {
 
     private static void showe() {
         if (checkPlay())
-            client.showEntities();
+            client.entityTool.showEntity();
     }
 
     private static void dig() throws IOException {

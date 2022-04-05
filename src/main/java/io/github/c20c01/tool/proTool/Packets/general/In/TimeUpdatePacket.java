@@ -15,6 +15,8 @@ public class TimeUpdatePacket extends Packet {
         VarInputStream is = getInputStream();
         worldAge = is.readLong();
         time = is.readLong();
+        is.close();
+        close();
     }
 
     public long getWorldAge() {

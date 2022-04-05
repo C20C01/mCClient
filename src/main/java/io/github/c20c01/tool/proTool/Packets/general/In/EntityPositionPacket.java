@@ -19,6 +19,8 @@ public class EntityPositionPacket extends Packet {
         my = is.readShort();
         mz = is.readShort();
         onGround = is.readBoolean();
+        is.close();
+        close();
     }
 
     public int getEntityID() {

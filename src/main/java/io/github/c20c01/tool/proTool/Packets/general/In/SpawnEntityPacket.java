@@ -32,6 +32,8 @@ public class SpawnEntityPacket extends Packet {
         vX = is.readShort();
         vY = is.readShort();
         vZ = is.readShort();
+        is.close();
+        close();
     }
 
     public int getID() {

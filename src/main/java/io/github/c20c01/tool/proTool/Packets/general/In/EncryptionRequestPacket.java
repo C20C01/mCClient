@@ -19,6 +19,8 @@ public class EncryptionRequestPacket extends Packet {
         publicKey = is.readNBytes(publicKeyLength);
         int verifyTokenLength = is.readVarInt();
         verifyToken = is.readNBytes(verifyTokenLength);
+        is.close();
+        close();
     }
 
     public String getServerId() {

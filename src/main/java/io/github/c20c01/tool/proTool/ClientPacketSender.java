@@ -1,5 +1,6 @@
 package io.github.c20c01.tool.proTool;
 
+import io.github.c20c01.Main;
 import io.github.c20c01.tool.Position;
 import io.github.c20c01.tool.proTool.Packets.encryption.Tool;
 import io.github.c20c01.tool.proTool.Packets.general.Out.*;
@@ -44,6 +45,7 @@ public class ClientPacketSender {
     public void KeepAliveOut(long aliveId) throws IOException {
         KeepAliveOutPacket packet = new KeepAliveOutPacket(aliveId);
         os.write(packet.getData(client.compression));
+        System.gc();
         //Main.output("KeepAlivePacket Out!");
     }
 

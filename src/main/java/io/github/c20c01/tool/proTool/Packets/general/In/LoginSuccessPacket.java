@@ -15,6 +15,8 @@ public class LoginSuccessPacket extends Packet {
         VarInputStream is = getInputStream();
         uuid = is.readUUID().toString();
         username = is.readString();
+        is.close();
+        close();
     }
 
     /**

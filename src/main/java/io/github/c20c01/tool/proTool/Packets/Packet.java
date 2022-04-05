@@ -24,6 +24,11 @@ public class Packet {
         varBuffer.write(data);
     }
 
+    protected void close() throws IOException {
+        rawBuffer.close();
+        varBuffer.close();
+    }
+
     protected void putVarInt(int v) {
         try {
             varBuffer.writeVarInt(v);
