@@ -2,13 +2,13 @@
 
 ## 支持正版服务器的命令行MC登陆器
 
-### 关键词：Java、支持正版验证、命令行（无图形界面）、仅支持协议757（MC 1.18）、简单
+### 关键词：Java、支持正版验证、命令行（无图形界面）、仅支持协议757、758（MC 1.18+）、~~简单~~
 
 + 使用Java编写，许多代码来自另一开源项目 [Another-Minecraft-Chat-Client](https://github.com/Defective4/Another-Minecraft-Chat-Client)，mCClient算是它的简化版本吧，只是加上了对正版的支持。
 
 + 目前仅支持使用UUID及AccessToken进行正版验证，还没搞微软那个登录，如何获取UUID和AccessToken可以看看下面的说明。
 
-+ 本人Java功力不深，这个东西更多是一个半成品或者是一个示例，只有较少的功能。
++ 本人Java功力不深，~~这个东西更多是一个半成品或者是一个示例，只有较少的功能。~~
 
 ### 现阶段的具体功能
 
@@ -25,6 +25,8 @@
 + 当玩家死亡时，自动重生。同时返回提示。
 
 + 保存玩家的参数到其文件夹内自动生成的json文档（mCClient.json），下次就能直接使了。
+
+***
 
 ### 2022/4/26 更新到1.4版本：
 
@@ -50,9 +52,9 @@
 12. 增加了提示，每层子命令都会提供相应的命令，及其说明。更容易上手了。
 13. 改进了命令交互模式，现在进入子命令后在执行大部分命令后，不会直接返回到主页面，而是需要输入“back”。
 
-#### 音符盒演奏功能的演示视频：
+#### 音符盒演奏功能的演示视频：[B站视频](https://www.bilibili.com/video/BV1Ai4y1m7dy)
 
-<iframe src="//player.bilibili.com/player.html?bvid=BV1Ai4y1m7dy&page=1" width=800 height=600> </iframe>
+***
 
 #### 关于正版验证的UUID及AccessToken的获取
 
