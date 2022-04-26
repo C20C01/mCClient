@@ -1,6 +1,8 @@
 package io.github.c20c01;
 
 import com.google.gson.Gson;
+import io.github.c20c01.tool.Position;
+import io.github.c20c01.tool.PositionTool;
 import io.github.c20c01.tool.proTool.MinecraftClient;
 import io.github.c20c01.tool.proTool.Packets.encryption.Tool;
 
@@ -22,6 +24,7 @@ public class Main {
     private static boolean play = false;
     private static StringWriter stringWriter;
     private static boolean waitingForMore = false;
+    private static File[] nbsFiles = null;
     private static int[] waitingID = {-1, -1, -1};
 
     public static void main(String[] args) throws IOException {
@@ -62,7 +65,7 @@ public class Main {
         if (!settingFile.createNewFile()) getSetting();
         else {
             prLn("First time use? Read the instructions below to get started.");
-            help();
+            getHelp("1");
             writeSettingJson();
         }
 
@@ -114,20 +117,6 @@ public class Main {
         out.close();
     }
 
-    private static void help() {
-        prLn("""
-                ====================Help===================
-                | help <---Get help.
-                | set <----Setting parameters.
-                | check <--Show your current settings.
-                | ping <---Get server information.
-                | join <---Join the server.
-                | close <--Exit server or mCClient.
-                | /cc <----Enter or Exit the command mode.
-                ==========================================="""
-        );
-    }
-
     private static boolean checkPlay() {
         if (client != null && play)
             return true;
@@ -174,8 +163,8 @@ public class Main {
             pr(stringWriter.toString());
             try {
                 stringWriter.close();
-            } catch (IOException e) {
                 stringWriter = null;
+            } catch (IOException ignored) {
             }
         }
     }
@@ -212,8 +201,12 @@ public class Main {
         if (waitingForMore) {
             switch (waitingID[0]) {
                 case 0 -> setting(input);
-                case 1 -> sending(input);
-                case 2 -> setAttack(input);
+                case 1 -> getHelp(input);
+                case 2 -> sending(input);
+                case 3 -> setAttack(input);
+                case 4 -> moveTo(input);
+                case 5 -> changeHeldItem(input);
+                case 6 -> setMusic(input);
             }
         } else
             switch (input) {
@@ -227,6 +220,9 @@ public class Main {
                 case "attack" -> attack();
                 case "showe" -> showe();
                 case "dig" -> dig();
+                case "item" -> item();
+                case "move" -> move();
+                case "music" -> music();
                 default -> prLn("Unknown command! Type \"help\" to get help.");
             }
     }
@@ -243,10 +239,10 @@ public class Main {
                 | > username <----Your name
                 | > uuid <--------Your UUID
                 | > token <-------Your AccessToken
-                | > cancel <------Exit this setting mode
+                | > back <--------Back to previous
                 ============================================="""
         );
-        pr("Set: ");
+        pr("set: ");
     }
 
     private static void setting(String input) throws IOException {
@@ -276,24 +272,27 @@ public class Main {
                     waitingID[1] = 5;
                     pr("token: ");
                 }
-                case "cancel" -> {
-                    prLn("Cancel.");
+                case "back" -> {
+                    prLn("Back to main page.");
                     finishWaiting();
                 }
                 default -> prLn("Unknown command! Please enter again.");
             }
         else {
-            switch (waitingID[1]) {
-                case 0 -> host = input;
-                case 1 -> port = Integer.parseInt(input);
-                case 2 -> protocol = Integer.parseInt(input);
-                case 3 -> userName = input;
-                case 4 -> Tool.setUuid(input);
-                case 5 -> Tool.setAccessToken(input);
+            if (!input.equals("back")) {
+                switch (waitingID[1]) {
+                    case 0 -> host = input;
+                    case 1 -> port = Integer.parseInt(input);
+                    case 2 -> protocol = Integer.parseInt(input);
+                    case 3 -> userName = input;
+                    case 4 -> Tool.setUuid(input);
+                    case 5 -> Tool.setAccessToken(input);
+                }
+                prLn("Complete.");
+                writeSettingJson();
             }
-            prLn("Complete.");
-            writeSettingJson();
-            finishWaiting();
+            pr("set:");
+            waitingID[1] = -1;
         }
 
     }
@@ -323,7 +322,6 @@ public class Main {
             offlineFirst = true;
             runMinecraftClient();
         }
-
     }
 
     private static void runMinecraftClient() throws IOException {
@@ -336,6 +334,57 @@ public class Main {
     public static void LoginSuccess() {
         commandMode(false);
         play = true;
+    }
+
+    private static void help() {
+        prLn("""
+                =====================help=====================
+                | Enter a number to get help page.
+                | > <page> <------Select the number of pages
+                | > back <--------Back to previous
+                =============================================="""
+        );
+        pr("help: ");
+        waitingForMore(1);
+    }
+
+    private static void getHelp(String page) {
+        if (!page.equals("back")) {
+            switch (page) {
+                case "1" -> prLn("""
+                        ==================Help 1/3=================
+                        | help <---Get help.
+                        | set <----Setting parameters.
+                        | check <--Show your current settings.
+                        | ping <---Get server information.
+                        | join <---Join the server.
+                        | close <--Exit server or mCClient.
+                        | /cc <----Enter or Exit the command mode.
+                        ==========================================="""
+                );
+                case "2" -> prLn("""
+                        ==================Help 2/3=================
+                        | send <---Send a message to server.
+                        | attack <-Attack specified entity.
+                        | showe <--Show all entities around.
+                        | dig <----Dig the specified block.
+                        | item <---Switch your inventory.
+                        | move <---Move to the specified position.
+                        ==========================================="""
+                );
+                case "3" -> prLn("""
+                        ==================Help 3/3=================
+                        | music <--Play the note block.
+                        ==========================================="""
+                );
+                default -> prLn("Wrong page, try again.");
+            }
+            if (waitingID[0] == 1)
+                pr("help: ");
+        } else {
+            prLn("Back to main page.");
+            finishWaiting();
+        }
     }
 
     private static void check() {
@@ -377,7 +426,7 @@ public class Main {
     private static void send() {
         if (checkPlay()) {
             pr("send: ");
-            waitingForMore(1);
+            waitingForMore(2);
         }
     }
 
@@ -385,33 +434,94 @@ public class Main {
         if (client.isConnected()) {
             client.sender.ChatMessageOut(s);
             prLn("Done!");
-        } else prLn("Wrong!");
+        } else prLn("Error!");
         finishWaiting();
     }
 
     private static void attack() {
         if (checkPlay()) {
-            prLn("~~commands~~");
+            prLn("""
+                    ====================attack====================
+                    | Available command:
+                    | > start <-------Start attacking
+                    | > stop <--------Stop attacking
+                    | > check <-------Check if you are attacking
+                    | > set <---------Set related parameters
+                    | > back <--------Back to previous
+                    ============================================="""
+            );
             pr("attack: ");
-            waitingForMore(2);
+            waitingForMore(3);
         }
     }
 
     private static void setAttack(String input) {
         if (waitingID[1] == -1) {
             switch (input) {
-                case "check" -> prLn("Attacking: " + (client.isAttacking() ? "Yes" : "No"));
-                case "cancel" -> prLn("Cancel.");
-                case "stop" -> {
-                    client.attack(false);
-                    prLn("Stop.");
-                }
                 case "start" -> {
                     client.attack(true);
-                    prLn("Start.");
+                    prLn("Start!");
+                }
+                case "stop" -> {
+                    client.attack(false);
+                    prLn("Stop!");
+                }
+                case "set" -> {
+                    prLn("""
+                            ==================attack set==================
+                            | Available command:
+                            | > time <--------Attack interval
+                            | > id <----------ID of the attacked entity
+                            | > back <--------Back to previous
+                            =============================================="""
+                    );
+                    pr("set: ");
+                    waitingID[1] = 0;
+                    return;
+                }
+                case "check" -> client.checkAttack();
+                case "back" -> prLn("Back.");
+                default -> {
+                    prLn("Unknown command! Please enter again.");
+                    pr("attack: ");
+                    return;
                 }
             }
             finishWaiting();
+        } else {
+            if (waitingID[2] == -1) {
+                switch (input) {
+                    case "time" -> {
+                        waitingID[2] = 0;
+                        pr("time (ms): ");
+                    }
+                    case "id" -> {
+                        waitingID[2] = 1;
+                        pr("id: ");
+                    }
+                    case "back" -> {
+                        waitingID[1] = -1;
+                        prLn("attack: ");
+                    }
+                    default -> {
+                        prLn("Unknown command! Please enter again.");
+                        pr("set: ");
+                    }
+                }
+            } else {
+                if (input.equals("back")) {
+                    waitingID[1] = -1;
+                    pr("attack: ");
+                } else {
+                    switch (waitingID[2]) {
+                        case 0 -> client.setAttackTime(Integer.parseInt(input));
+                        case 1 -> client.setAttackID(Integer.parseInt(input));
+                    }
+                    prLn("Complete.");
+                    pr("set: ");
+                }
+                waitingID[2] = -1;
+            }
         }
     }
 
@@ -420,8 +530,165 @@ public class Main {
             client.entityTool.showEntity();
     }
 
-    private static void dig() throws IOException {
+    private static void dig() {
         if (checkPlay())
-            client.dig();
+            prLn("not developed!");
+    }
+
+    private static void item() {
+        if (checkPlay()) {
+            prLn("""
+                    =====================item=====================
+                    | Enter 1~9 to select first to ninth inventory.
+                    | > <slot> <------Select the item slot
+                    | > back <--------Back to previous
+                    =============================================="""
+            );
+            pr("item: ");
+            waitingForMore(5);
+        }
+    }
+
+    private static void changeHeldItem(String input) throws IOException {
+        if (input.equals("back")) {
+            prLn("Back to main page.");
+            finishWaiting();
+        } else {
+            int slot = Integer.parseInt(input);
+            if (slot < 10 && slot > 0) {
+                client.changeHeldItem(slot);
+                prLn("Complete.");
+                finishWaiting();
+            } else {
+                prLn("Slot must be 1~9, try again!");
+                pr("item: ");
+            }
+        }
+    }
+
+    private static void move() {
+        if (checkPlay()) {
+            prLn("""
+                    ======================move======================
+                    | Move to the specified position.
+                    | > <x> <y> <z> <----Move to point(x,y,z)
+                    |                    Not "/tp", if you move too
+                    |                    far, you will be kicked
+                    |                    out by the server.
+                    | > back <-----------Back to previous
+                    ==============================================="""
+            );
+            pr("move: ");
+            waitingForMore(4);
+        }
+    }
+
+    private static void moveTo(String input) throws IOException {
+        if (input.equals("back")) {
+            prLn("Back to main page.");
+            finishWaiting();
+        } else {
+            Position position = PositionTool.inputIntPosition(input);
+            if (position != null) {
+                client.playerPosition(position, true);
+                prLn("Complete.");
+                finishWaiting();
+            } else {
+                pr("move: ");
+            }
+        }
+    }
+
+
+    private static void music() {
+        if (checkPlay()) {
+            prLn("""
+                    =====================music=====================
+                    | Available command:
+                    | > load <--------Load the specified song(.nbs)
+                    | > play <--------Start/Resume playing
+                    | > stop <--------Pause playing
+                    | > cancel <------Cancel playback
+                    | > check <-------View playback status
+                    | > back <--------Back to previous
+                    ==============================================="""
+            );
+            try {
+                if (new File("songs").mkdir())
+                    prLn("A folder named \"songs\" has been created,\n" +
+                            "please put your \".nbs\" files into it.");
+            } catch (Exception e) {
+                prLn("Failed to create a folder named \"songs\"!");
+            }
+            pr("music: ");
+            waitingForMore(6);
+        }
+    }
+
+    private static void setMusic(String input) {
+
+        if (waitingID[1] == -1) {
+            switch (input) {
+                case "load" -> {
+                    prLn("""
+                            =====================music load=====================
+                            | Load the specified song.
+                            | > <number> <--Load songs by the number below
+                            |               Only files in .nbs format placed in
+                            |               the "songs" folder will be loaded
+                            | > back <------Back to previous
+                            ===================================================="""
+                    );
+                    nbsFiles = new File("songs").listFiles(
+                            f -> f.getName().substring(f.getName().lastIndexOf(".")).equals(".nbs"));
+                    if (nbsFiles != null) {
+                        for (int i = 0; i < nbsFiles.length; i++) {
+                            File file = nbsFiles[i];
+                            pr("| " + i + " ");
+                            for (int j = 0; j < 10 - ("" + i).length(); j++) {
+                                pr("-");
+                            }
+                            prLn(" " + file.getName());
+                        }
+                        prLn("====================================================");
+                        pr("load: ");
+                        waitingID[1] = 0;
+                        return;
+                    } else {
+                        prLn("No \".nbs\" files found!");
+                        waitingID[1] = -1;
+                    }
+                }
+                case "back" -> {
+                    prLn("Back to main page.");
+                    finishWaiting();
+                    return;
+                }
+                case "cancel" -> client.musicBox.stopSong();
+
+                case "stop" -> client.musicBox.pauseSong();
+
+                case "play" -> {
+                    if (client.musicBox.startSong()) prLn("Start!");
+                }
+                case "check" -> client.musicBox.checkPlaying();
+                default -> prLn("Unknown command! Please enter again.");
+            }
+            pr("music: ");
+        } else {
+            if (!input.equals("back")) {
+                try {
+                    File file = nbsFiles[Integer.parseInt(input)];
+                    client.musicBox.loadSong(file);
+                } catch (Exception e) {
+                    prLn("Failed to load! Please enter the correct number.");
+                    pr("load: ");
+                    return;
+                }
+            }
+            nbsFiles = null;
+            waitingID[1] = -1;
+            pr("music: ");
+        }
     }
 }

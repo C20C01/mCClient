@@ -15,6 +15,14 @@ public class PlayerDiggingPacket extends Packet {
         close();
     }
 
+    public PlayerDiggingPacket(Status status, Long position, Face face) throws IOException {
+        super(0x1A);
+        putVarInt(status.ordinal());
+        putLong(position);
+        putByte(face.ordinal());
+        close();
+    }
+
     public enum Status {Started, Cancelled, Finished, DropItemStack, DropItem, ShootOrEat, SwapItemInHand}
 
     public enum Face {Bottom, Top, North, South, West, East}

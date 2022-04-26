@@ -2,6 +2,7 @@ package io.github.c20c01.tool.proTool;
 
 import io.github.c20c01.Main;
 import io.github.c20c01.tool.*;
+import io.github.c20c01.tool.musicBoxTool.MusicBoxTool;
 import io.github.c20c01.tool.proTool.Packets.encryption.Tool;
 import io.github.c20c01.tool.proTool.Packets.general.Out.HandShakePacket;
 import io.github.c20c01.tool.proTool.Packets.general.Out.LoginRequestPacket;
@@ -14,7 +15,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.zip.Inflater;
@@ -35,6 +37,7 @@ public class MinecraftClient {
     public String DisconnectReason = "";
     public Position playerPos;
     public EntityTool entityTool = null;
+    public MusicBoxTool musicBox = new MusicBoxTool(this);
 
     public MinecraftClient(String host, int port, int protocol) {
         this.host = host;
@@ -160,7 +163,7 @@ public class MinecraftClient {
 
     public void closeFromMain() throws IOException {
         connected = false;
-        Main.output("Closing...", true);
+        Main.output(TimeTool.getTime() + "Closing...", true);
         DisconnectReason = "Disconnect by yourself.";
         close();
     }
@@ -170,6 +173,7 @@ public class MinecraftClient {
         is.close();
         os.close();
         entityTool.close();
+        attack(false);
         if (packetReaderThread != null) packetReaderThread.interrupt();
         try {
             if (soc != null && !soc.isClosed()) soc.close();
@@ -178,36 +182,82 @@ public class MinecraftClient {
     }
 
     private boolean attacking = false;
-    private Timer timer;
+    private Timer attackTimer;
+    private int attackTime = 200;
+    private int attackID = -1;
+    private TimerTask attackTask;
 
-    public boolean isAttacking() {
-        return attacking;
+    public void setAttackTime(int time) {
+        if (time < 200) {
+            Main.output("Too fast, period has been set to 200ms.", true);
+            attackTime = 200;
+        } else attackTime = time;
+    }
+
+    public void setAttackID(int id) {
+        if (id > 0) attackID = id;
+    }
+
+    public void setAttackTask() {
+        if (attackID < 0) {
+            Main.output("Entity ID not specified. Attacking any entity!", true);
+            attackTask = new TimerTask() {
+                Set<Integer> attackIDs;
+
+                public void run() {
+                    try {
+                        if (entityTool.entityChanged()) {
+                            attackIDs = new HashSet<>();
+                            attackIDs.addAll(entityTool.getLivingEntityHashMap().keySet());
+                        }
+                        for (int id : attackIDs) {
+                            sender.Attack(id);
+                        }
+                    } catch (Exception e) {
+                        attack(false);
+                        Main.output("Stopped attacking!", true);
+                    }
+                }
+            };
+        } else {
+            Main.output("Entity ID specified: " + attackID, true);
+            attackTask = new TimerTask() {
+                public void run() {
+                    try {
+                        if (entityTool.entityChanged() && !entityTool.getLivingEntityHashMap().containsKey(attackID)) {
+                            attack(false);
+                            Main.output("Non-existent entity. Attack is over!", true);
+                        } else sender.Attack(attackID);
+                    } catch (Exception e) {
+                        attack(false);
+                        Main.output("Stopped attacking!", true);
+                    }
+                }
+            };
+        }
+    }
+
+    public void checkAttack() {
+        Main.output(
+                "============================" +
+                        "| Attacking: " + attacking + "\n" +
+                        "| Attacking period: " + attackTime + "\n" +
+                        "| Attacking ID: " + ((attackID < 0) ? "null" : attackID) + "\n" +
+                        "============================"
+                , true);
     }
 
     public void attack(boolean attack) {
         attacking = attack;
         if (attack) {
-            timer = new Timer();
-            timer.schedule(new TimerTask() {
-                public void run() {
-                    ArrayList<Entity> livingEList = entityTool.getLivingEList();
-                    try {
-                        for (Entity n : livingEList)
-                            sender.Attack(n.getID());
-
-                        Entity closestE = entityTool.getClosestE(livingEList);
-                        if (closestE != null) {
-                            lookAt(closestE.getPosition());
-                            closestE = null;
-                        }
-                    } catch (IOException e) {
-                        attack(false);
-                        Main.output("Stopped attacking!", true);
-                    }
-                    livingEList.clear();
-                }
-            }, 1000, 200);
-        } else timer.cancel();
+            attackTimer = new Timer();
+            setAttackTask();
+            entityTool.resetEntityChanged();
+            attackTimer.schedule(attackTask, 1000, attackTime);
+        } else {
+            if (attackTimer != null) attackTimer.cancel();
+            attackID = -1;
+        }
     }
 
     public void lookAt(Position position) {
@@ -219,7 +269,17 @@ public class MinecraftClient {
         }
     }
 
-    public void dig() throws IOException {
-        sender.PlayerDigging(PlayerDiggingPacket.Status.Started, new Position(1, 1, 1), PlayerDiggingPacket.Face.Bottom);
+    public void clickBlock(long position) throws IOException {
+        sender.PlayerDigging(PlayerDiggingPacket.Status.Started, position, PlayerDiggingPacket.Face.Bottom);
+        sender.PlayerDigging(PlayerDiggingPacket.Status.Cancelled, position, PlayerDiggingPacket.Face.Bottom);
     }
+
+    public void changeHeldItem(int slot) throws IOException {
+        sender.HeldItemChange(slot);
+    }
+
+    public void playerPosition(Position position, boolean onGround) throws IOException {
+        sender.PlayerPosition(position.x(), position.y(), position.z(), onGround);
+    }
+
 }

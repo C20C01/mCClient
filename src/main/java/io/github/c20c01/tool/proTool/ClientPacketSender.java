@@ -1,6 +1,5 @@
 package io.github.c20c01.tool.proTool;
 
-import io.github.c20c01.Main;
 import io.github.c20c01.tool.Position;
 import io.github.c20c01.tool.proTool.Packets.encryption.Tool;
 import io.github.c20c01.tool.proTool.Packets.general.Out.*;
@@ -55,6 +54,16 @@ public class ClientPacketSender {
     }
 
     public void ChatMessageOut(String message) throws IOException {
+        if (message.length() > 256) {
+            while (message.length() > 256) {
+                ChatMessageOutSend(message.substring(0, 256));
+                message = message.substring(256);
+            }
+        }
+        ChatMessageOutSend(message);
+    }
+
+    private void ChatMessageOutSend(String message) throws IOException {
         ChatMessageOutPacket packet = new ChatMessageOutPacket(message);
         os.write(packet.getData(client.compression));
     }
@@ -80,6 +89,21 @@ public class ClientPacketSender {
 
     public void PlayerDigging(PlayerDiggingPacket.Status status, Position position, PlayerDiggingPacket.Face face) throws IOException {
         PlayerDiggingPacket packet = new PlayerDiggingPacket(status, position, face);
+        os.write(packet.getData(client.compression));
+    }
+
+    public void PlayerDigging(PlayerDiggingPacket.Status status, long position, PlayerDiggingPacket.Face face) throws IOException {
+        PlayerDiggingPacket packet = new PlayerDiggingPacket(status, position, face);
+        os.write(packet.getData(client.compression));
+    }
+
+    public void HeldItemChange(int slot) throws IOException {
+        HeldItemChangePacket packet = new HeldItemChangePacket(slot);
+        os.write(packet.getData(client.compression));
+    }
+
+    public void PlayerPosition(double x, double feetY, double z, boolean onGround) throws IOException {
+        PlayerPositionPacket packet = new PlayerPositionPacket(x, feetY, z, onGround);
         os.write(packet.getData(client.compression));
     }
 }

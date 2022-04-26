@@ -1,5 +1,7 @@
 package io.github.c20c01.tool;
 
+import io.github.c20c01.Main;
+
 import static java.lang.Math.atan2;
 
 public class PositionTool {
@@ -24,5 +26,19 @@ public class PositionTool {
 
     public static long getPosition(Position position) {
         return (((long) position.x() & 0x3FFFFFF) << 38) | (((long) position.z() & 0x3FFFFFF) << 12) | ((long) position.y() & 0xFFF);
+    }
+
+    public static long getPosition(int x, int y, int z) {
+        return (((long) x & 0x3FFFFFF) << 38) | (((long) z & 0x3FFFFFF) << 12) | ((long) y & 0xFFF);
+    }
+
+    public static Position inputIntPosition(String input) {
+        String[] point = input.split(" ");
+        if (point.length == 3) {
+            return new Position(Integer.parseInt(point[0]), Integer.parseInt(point[1]), Integer.parseInt(point[2]));
+        } else {
+            Main.output("Wrong format, try again!", true);
+        }
+        return null;
     }
 }
