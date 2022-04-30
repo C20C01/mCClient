@@ -223,6 +223,7 @@ public class Main {
                 case "item" -> item();
                 case "move" -> move();
                 case "music" -> music();
+                case "auto" -> auto();
                 default -> prLn("Unknown command! Type \"help\" to get help.");
             }
     }
@@ -298,8 +299,7 @@ public class Main {
     }
 
     private static void ping() {
-        client = new MinecraftClient(host, port, protocol);
-        client.ping();
+        new MinecraftClient(host, port, protocol).ping();
     }
 
     private static void join() throws IOException {
@@ -375,6 +375,7 @@ public class Main {
                 case "3" -> prLn("""
                         ==================Help 3/3=================
                         | music <--Play the note block.
+                        | auto <---Automatic chat.
                         ==========================================="""
                 );
                 default -> prLn("Wrong page, try again.");
@@ -691,4 +692,13 @@ public class Main {
             pr("music: ");
         }
     }
+
+    private static void auto() {
+        client.listener.messageTool.autoSender = !client.listener.messageTool.autoSender;
+        if (client.listener.messageTool.autoSender)
+            prLn("Automatic chat: ON.");
+        else
+            prLn("Automatic chat: OFF.");
+    }
+
 }

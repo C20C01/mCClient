@@ -15,10 +15,12 @@ public class ClientPacketListener {
     private final ClientPacketSender sender;
     private boolean play = false;
     private boolean encryption = false;
+    public final MessageTool messageTool;
 
     public ClientPacketListener(MinecraftClient client) {
         this.client = client;
         sender = client.sender;
+        messageTool = new MessageTool(sender);
     }
 
     public void packetReceived(final int id, byte[] data) throws Exception {
@@ -79,7 +81,7 @@ public class ClientPacketListener {
 
     private void ChatMessageIn(byte[] data) throws IOException {
         ChatMessageInPacket packet = new ChatMessageInPacket(data);
-        Main.output(TimeTool.getTime() + MessageTool.readString(packet.getMessage()));
+        Main.output(TimeTool.getTime() + messageTool.readString(packet.getMessage()));
     }
 
     private void PlayerDies() throws IOException {

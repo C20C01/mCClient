@@ -34,6 +34,7 @@ public class MinecraftClient {
     public boolean compression = false;
     public boolean play = false;
     public ClientPacketSender sender = null;
+    public ClientPacketListener listener = null;
     public String DisconnectReason = "";
     public Position playerPos;
     public EntityTool entityTool = null;
@@ -80,7 +81,7 @@ public class MinecraftClient {
         os = soc.getOutputStream();
         is = new VarInputStream(soc.getInputStream());
         sender = new ClientPacketSender(os, this);
-        ClientPacketListener listener = new ClientPacketListener(this);
+        listener = new ClientPacketListener(this);
         HandShakePacket handshake = new HandShakePacket(protocol, host, port, 2);
         os.write(handshake.getData(false));
         LoginRequestPacket login = new LoginRequestPacket(username);
